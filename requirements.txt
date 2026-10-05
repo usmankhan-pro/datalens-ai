@@ -1,0 +1,15 @@
+# DataLens AI - Dependencies
+# Compatible with Python 3.14+
+streamlit>=1.36.0
+pandas>=2.2.0
+numpy>=1.26.0
+scipy>=1.13.0
+statsmodels>=0.14.0
+plotly>=5.22.0
+openpyxl>=3.1.0
+xlrd>=2.0.1
+xlsxwriter>=3.2.0
+reportlab>=4.2.0
+kaleido>=0.2.1
+chardet>=5.2.0
+pytest>=8.2.0

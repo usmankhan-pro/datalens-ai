@@ -1,0 +1,2 @@
+This is a plain text file.
+It should not be loadable as data.
