@@ -239,7 +239,9 @@ def page() -> None:
             use_container_width=False,
         ):
             from ui.pages.dashboard import _load_demo
+            from ui.pages.registry import get_page_registry
+
             _load_demo()
-            st.rerun()
+            st.switch_page(get_page_registry()["dashboard"])
 
     st.markdown("</div>", unsafe_allow_html=True)

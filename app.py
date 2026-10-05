@@ -22,53 +22,10 @@ from ui.theme.css import inject_css
 
 inject_css(get_theme())
 
-# --- Import Page Modules ---
-from ui.pages import (
-    dashboard,
-    upload,
-    profile,
-    quality,
-    cleaning,
-    exploratory,
-    statistics,
-    anomalies,
-    correlations,
-    kpis,
-    insights,
-    explorer,
-    reports,
-    settings,
-)
+from ui.pages.registry import get_navigation
 
 # --- Navigation ---
-pages = {
-    "Overview": [
-        st.Page(dashboard.page, title="Dashboard", icon="📊", default=True),
-    ],
-    "Data": [
-        st.Page(upload.page, title="Data Upload", icon="📤"),
-        st.Page(profile.page, title="Data Profile", icon="🔬"),
-        st.Page(quality.page, title="Data Quality", icon="✅"),
-        st.Page(cleaning.page, title="Data Cleaning", icon="🧹"),
-    ],
-    "Analysis": [
-        st.Page(exploratory.page, title="Exploratory Analysis", icon="📈"),
-        st.Page(statistics.page, title="Statistics", icon="📐"),
-        st.Page(anomalies.page, title="Anomalies", icon="🔍"),
-        st.Page(correlations.page, title="Correlations", icon="🔗"),
-    ],
-    "Intelligence": [
-        st.Page(kpis.page, title="KPIs", icon="🎯"),
-        st.Page(insights.page, title="Insights", icon="💡"),
-    ],
-    "Tools": [
-        st.Page(explorer.page, title="Data Explorer", icon="🗂️"),
-        st.Page(reports.page, title="Reports", icon="📄"),
-        st.Page(settings.page, title="Settings", icon="⚙️"),
-    ],
-}
-
-pg = st.navigation(pages)
+pg = st.navigation(get_navigation())
 
 # --- Sidebar ---
 with st.sidebar:

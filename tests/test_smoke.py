@@ -53,6 +53,24 @@ class TestImports:
             assert hasattr(module, "page"), f"{module.__name__} missing page() function"
             assert callable(module.page)
 
+    def test_page_registry_targets_exist(self):
+        from pathlib import Path
+
+        from ui.pages.registry import get_page_files
+
+        required = [
+            "dashboard", "upload", "profile", "quality", "cleaning",
+            "exploratory", "statistics", "anomalies", "correlations",
+            "kpis", "insights", "explorer", "reports", "settings",
+        ]
+
+        page_files = get_page_files()
+
+        for key in required:
+            assert key in page_files, f"Page registry missing {key}"
+            page_path = page_files[key]
+            assert Path(page_path).is_file(), f"Page target file missing for {key}: {page_path}"
+
 
 class TestDatasetBundle:
     """Verify DatasetBundle creation and behavior."""

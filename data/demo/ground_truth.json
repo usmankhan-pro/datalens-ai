@@ -1,0 +1,13 @@
+{
+  "missing_marketing_spend": 400,
+  "missing_cost": 150,
+  "missing_region": 100,
+  "duplicate_rows": 40,
+  "revenue_outliers": 15,
+  "negative_quantities": 6,
+  "unparseable_dates": 8,
+  "inconsistent_casing_region": 12,
+  "total_rows": 5040,
+  "total_columns": 10,
+  "original_rows_before_duplicates": 5000
+}

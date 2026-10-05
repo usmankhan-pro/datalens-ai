@@ -63,7 +63,9 @@ def _render_landing() -> None:
             use_container_width=True,
             key="landing_upload_btn",
         ):
-            st.switch_page("ui/pages/upload.py")
+            from ui.pages.registry import get_page_registry
+
+            st.switch_page(get_page_registry()["upload"])
     with col_btn2:
         if st.button(
             "🎲  Try Demo Dataset",
@@ -71,7 +73,9 @@ def _render_landing() -> None:
             key="landing_demo_btn",
         ):
             _load_demo()
-            st.rerun()
+            from ui.pages.registry import get_page_registry
+
+            st.switch_page(get_page_registry()["dashboard"])
 
     st.markdown("<br><br>", unsafe_allow_html=True)
 
@@ -134,14 +138,53 @@ def _render_landing() -> None:
 
 def page() -> None:
     """Render the Dashboard page."""
-    from core.utils.state import has_dataset
+    from core.quality import analyze_quality
+    from core.insights import build_dashboard_summary
+    from core.utils.state import get_bundle, has_dataset
 
     if not has_dataset():
         _render_landing()
-    else:
-        # Phase 6 will replace this with the full dashboard
-        st.markdown('<div class="animate-fade-in">', unsafe_allow_html=True)
-        st.title("📊 Dashboard")
-        st.markdown("---")
-        st.info("🚧 Dashboard — Coming in Phase 6")
-        st.markdown("</div>", unsafe_allow_html=True)
+        return
+
+    bundle = get_bundle()
+    df = (bundle.working_df if bundle is not None else None) or (bundle.original_df if bundle is not None else None)
+    if df is None:
+        st.info("No dataset is currently loaded.")
+        return
+
+    quality_result = bundle.quality_result if bundle is not None and bundle.quality_result is not None else analyze_quality(df)
+    summary = build_dashboard_summary(df, quality_result=quality_result)
+
+    st.markdown('<div class="animate-fade-in">', unsafe_allow_html=True)
+    st.title("📊 Executive Dashboard")
+    st.markdown("---")
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Rows", f"{summary['rows']:,}")
+    with col2:
+        st.metric("Columns", f"{summary['cols']}")
+    with col3:
+        st.metric("Quality", f"{summary['quality_score']:.1f}")
+    with col4:
+        st.metric("Status", summary['status'].replace('_', ' ').title())
+
+    st.subheader("Executive Summary")
+    summary_text = (
+        f"This dataset contains {summary['rows']:,} records across {summary['cols']} fields. "
+        f"The current quality score is {summary['quality_score']:.1f}, and the staged action plan "
+        f"focuses on {len(summary['recommendations'])} prioritized recommendations."
+    )
+    st.info(summary_text)
+
+    insight_cols = st.columns(min(3, max(1, len(summary['insights']))))
+    for idx, insight in enumerate(summary['insights'][:3]):
+        with insight_cols[idx % len(insight_cols)]:
+            st.markdown(f"### {insight['source_metric']}")
+            st.write(insight['text'])
+
+    st.subheader("Priority Recommendations")
+    for rec in summary['recommendations'][:5]:
+        st.markdown(f"- **{rec['severity']}**: {rec['text']}")
+
+    st.markdown("</div>", unsafe_allow_html=True)

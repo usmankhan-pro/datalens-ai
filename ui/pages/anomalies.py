@@ -1,9 +1,10 @@
-"""
-Anomalies page — anomaly detection with multiple methods.
-Implementation coming in Phase 5.
-"""
+"""Anomalies page — anomaly detection with multiple methods."""
 
+import pandas as pd
 import streamlit as st
+
+from core.anomaly import detect_anomalies
+from core.utils.state import get_bundle, has_dataset
 
 
 def page() -> None:
@@ -11,8 +12,6 @@ def page() -> None:
     st.markdown('<div class="animate-fade-in">', unsafe_allow_html=True)
     st.title("🔍 Anomaly Detection")
     st.markdown("---")
-
-    from core.utils.state import has_dataset
 
     if not has_dataset():
         st.markdown(
@@ -27,7 +26,36 @@ def page() -> None:
             """,
             unsafe_allow_html=True,
         )
-    else:
-        st.info("🚧 Anomaly Detection — Coming in Phase 5")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
 
+    bundle = get_bundle()
+    df = bundle.working_df if bundle is not None else None
+    if df is None or df.empty:
+        st.info("Insufficient data for anomaly detection because no rows are available.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+
+    numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
+    if not numeric_cols:
+        st.info("Insufficient data for anomaly detection because no numeric columns are available.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+
+    method = st.selectbox("Detection method", ["iqr", "z", "modified_z", "rolling"])
+    column = st.selectbox("Column", numeric_cols + ["All numeric columns"])
+    selected_column = None if column == "All numeric columns" else column
+
+    anomalies = detect_anomalies(df, method=method, column=selected_column)
+    if not anomalies:
+        st.success("No potential anomalies were detected using the selected method.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+
+    anomaly_df = pd.DataFrame(anomalies)
+    anomaly_df = anomaly_df.sort_values(["score"], ascending=False)
+    st.subheader("Potential anomalies detected")
+    st.dataframe(anomaly_df[["column", "value", "score", "direction", "method"]], use_container_width=True)
+
+    st.caption("Potential anomaly detected.")
     st.markdown("</div>", unsafe_allow_html=True)

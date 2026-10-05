@@ -199,20 +199,20 @@ def validate_dataframe(
             f"Auto-generated names: {', '.join(new_cols[:5])}{'...' if len(unnamed_cols) > 5 else ''}."
         )
 
-    # Handle duplicate column names
-    if df.columns.duplicated().any():
-        dupes = df.columns[df.columns.duplicated(keep=False)].unique().tolist()
-        # Auto-suffix duplicates
+    # Handle duplicate column names, including pandas auto-mangled names like "id.1"
+    normalized_names = [re.sub(r"\.\d+$", "", str(col)) for col in df.columns]
+    if len(set(normalized_names)) != len(normalized_names):
+        dupes = sorted({name for name in normalized_names if normalized_names.count(name) > 1})
         seen: dict = {}
         new_cols = []
         for col in df.columns:
-            col_str = str(col)
-            if col_str in seen:
-                seen[col_str] += 1
-                new_cols.append(f"{col_str}_{seen[col_str]}")
+            base_name = re.sub(r"\.\d+$", "", str(col))
+            if base_name in seen:
+                seen[base_name] += 1
+                new_cols.append(f"{base_name}_{seen[base_name]}")
             else:
-                seen[col_str] = 0
-                new_cols.append(col_str)
+                seen[base_name] = 0
+                new_cols.append(base_name)
         df.columns = new_cols
         warnings.append(
             f"Found duplicate column names: {', '.join(str(d) for d in dupes[:5])}. "
