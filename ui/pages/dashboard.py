@@ -60,22 +60,21 @@ def _render_landing() -> None:
         if st.button(
             "📤  Upload Dataset",
             type="primary",
-            use_container_width=True,
-            key="landing_upload_btn",
+            width="stretch",
+            key="home_upload_btn",
         ):
-            from ui.pages.registry import get_page_registry
-
-            st.switch_page(get_page_registry()["upload"])
+            st.session_state["home_show_uploader"] = True
+            st.rerun()
     with col_btn2:
         if st.button(
             "🎲  Try Demo Dataset",
-            use_container_width=True,
-            key="landing_demo_btn",
+            width="stretch",
+            key="home_demo_btn",
         ):
             _load_demo()
             from ui.pages.registry import get_page_registry
 
-            st.switch_page(get_page_registry()["dashboard"])
+            st.switch_page(get_page_registry()["overview"])
 
     st.markdown("<br><br>", unsafe_allow_html=True)
 
@@ -138,8 +137,14 @@ def _render_landing() -> None:
 
 def page() -> None:
     """Render the Dashboard page."""
-    from core.quality import analyze_quality
+    import pandas as pd
+
+    from core.anomaly import detect_anomalies
     from core.insights import build_dashboard_summary
+    from core.kpi import detect_kpis
+    from core.quality import analyze_quality
+    from core.statistics import correlation_matrix
+    from core.trends import analyze_trends
     from core.utils.state import get_bundle, has_dataset
 
     if not has_dataset():
@@ -147,7 +152,9 @@ def page() -> None:
         return
 
     bundle = get_bundle()
-    df = (bundle.working_df if bundle is not None else None) or (bundle.original_df if bundle is not None else None)
+    df = None
+    if bundle is not None:
+        df = bundle.working_df if bundle.working_df is not None else bundle.original_df
     if df is None:
         st.info("No dataset is currently loaded.")
         return
@@ -168,6 +175,48 @@ def page() -> None:
         st.metric("Quality", f"{summary['quality_score']:.1f}")
     with col4:
         st.metric("Status", summary['status'].replace('_', ' ').title())
+
+        st.subheader("Key Performance Indicators")
+        kpis = detect_kpis(df)
+        if kpis:
+            kpi_cols = st.columns(min(3, len(kpis)))
+            for idx, kpi in enumerate(kpis[:3]):
+                with kpi_cols[idx % len(kpi_cols)]:
+                    value = kpi["value"]
+                    display_value = f"{value:.2f}%" if kpi.get("unit") == "percent" else f"{value:,.2f}"
+                    st.metric(kpi["name"], display_value)
+        else:
+            st.info("No KPI candidates were identified.")
+
+        st.subheader("Trend")
+        date_columns = [
+            column for column in df.columns
+            if pd.api.types.is_datetime64_any_dtype(df[column]) or "date" in str(column).lower()
+        ]
+        numeric_columns = df.select_dtypes(include=["number"]).columns.tolist()
+        trend = None
+        if date_columns and numeric_columns:
+            trend = analyze_trends(df, date_columns[0], numeric_columns[0], freq="ME")
+        if trend and trend.get("status") == "ok":
+            st.write(trend["summary"])
+        else:
+            st.info("Insufficient date and numeric data for a trend summary.")
+
+        st.subheader("Top Potential Anomalies")
+        anomalies = detect_anomalies(df, method="iqr")
+        if anomalies:
+            anomaly_df = pd.DataFrame(anomalies).sort_values("score", ascending=False).head(5)
+            st.dataframe(anomaly_df, width="stretch", hide_index=True)
+        else:
+            st.info("No potential anomalies were identified by the IQR method.")
+
+        st.subheader("Correlations")
+        if len(numeric_columns) >= 2:
+            correlations = correlation_matrix(df)["pearson"]
+            st.dataframe(correlations, width="stretch")
+            st.caption("Correlation does not imply causation.")
+        else:
+            st.info("At least two numeric columns are required for correlations.")
 
     st.subheader("Executive Summary")
     summary_text = (

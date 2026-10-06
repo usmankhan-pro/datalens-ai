@@ -52,6 +52,6 @@ def page() -> None:
                 st.metric(label, f"{value:,.2f}")
 
     st.subheader("Detected KPI detail")
-    st.dataframe(metrics, use_container_width=True)
+    st.dataframe(metrics, width="stretch")
 
     st.markdown("</div>", unsafe_allow_html=True)

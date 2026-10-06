@@ -58,11 +58,7 @@ class TestImports:
 
         from ui.pages.registry import get_page_files
 
-        required = [
-            "dashboard", "upload", "profile", "quality", "cleaning",
-            "exploratory", "statistics", "anomalies", "correlations",
-            "kpis", "insights", "explorer", "reports", "settings",
-        ]
+        required = ["home", "overview", "data_quality", "clean", "analysis", "report"]
 
         page_files = get_page_files()
 

@@ -9,12 +9,16 @@ from core.utils.state import DatasetBundle, FileMeta, TransformRecord, get_bundl
 
 def _render_operation_controls(df: pd.DataFrame) -> None:
     """Render simple operation controls for preview/apply workflows."""
-    op = st.selectbox("Operation", ["remove_duplicates", "fill_missing_numeric", "standardize_text"])
+    op = st.selectbox(
+        "Operation",
+        ["remove_duplicates", "fill_missing_numeric", "standardize_text"],
+        key="clean_operation",
+    )
     if op == "fill_missing_numeric":
-        method = st.selectbox("Method", ["mean", "median", "mode"])
+        method = st.selectbox("Method", ["mean", "median", "mode"], key="clean_fill_method")
         params = {"method": method}
     elif op == "standardize_text":
-        case = st.selectbox("Case", ["upper", "lower", "title"])
+        case = st.selectbox("Case", ["upper", "lower", "title"], key="clean_text_case")
         params = {"case": case, "strip": True}
     else:
         params = {}
@@ -22,9 +26,9 @@ def _render_operation_controls(df: pd.DataFrame) -> None:
     preview = preview_operation(df, op, params)
     st.subheader("Preview")
     st.write(f"Rows affected: {preview['rows_affected']}")
-    st.dataframe(preview["preview"], use_container_width=True)
+    st.dataframe(preview["preview"], width="stretch")
 
-    if st.button("Apply Changes"):
+    if st.button("Apply Changes", key="clean_apply_button"):
         result = apply_operation(df, op, params)
         bundle = get_bundle()
         if bundle is not None:
@@ -42,7 +46,7 @@ def _render_operation_controls(df: pd.DataFrame) -> None:
             st.success("Cleaning operation applied.")
             st.rerun()
 
-    if st.button("Reset Changes"):
+    if st.button("Reset Changes", key="clean_reset_button"):
         bundle = get_bundle()
         if bundle is not None:
             bundle.working_df = bundle.original_df.copy()
@@ -63,7 +67,7 @@ def _render_operation_controls(df: pd.DataFrame) -> None:
                     "params": str(item.params),
                 }
                 for item in history
-            ]), use_container_width=True)
+            ]), width="stretch")
             script = export_history_script(history)
             st.code(script, language="python")
 
@@ -97,7 +101,7 @@ def page() -> None:
         return
 
     st.subheader("Working Dataset")
-    st.dataframe(bundle.working_df.head(100), use_container_width=True)
+    st.dataframe(bundle.working_df.head(100), width="stretch")
     _render_operation_controls(bundle.working_df)
 
     st.markdown("</div>", unsafe_allow_html=True)

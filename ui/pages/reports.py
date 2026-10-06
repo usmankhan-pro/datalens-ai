@@ -41,7 +41,7 @@ def page() -> None:
     st.subheader("Generate Report")
     st.caption("Reusable exports for the current working dataset.")
 
-    if st.button("Generate Report", type="primary"):
+    if st.button("Generate Report", type="primary", key="report_generate_button"):
         pdf_bytes = generate_pdf_report(df, quality_summary=quality_summary, issues=issues)
         excel_bytes = generate_excel_report(df, issues=issues, quality_summary=quality_summary)
         csv_bytes = generate_csv_report(df, issues=issues)

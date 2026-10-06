@@ -6,6 +6,7 @@ delimiter, and multi-sheet Excel files.
 """
 
 import streamlit as st
+import html
 
 
 def _format_file_size(size_bytes: int) -> str:
@@ -94,7 +95,9 @@ def _process_uploaded_file(uploaded_file) -> None:
             load_warnings=result.warnings,
         )
         set_bundle(bundle)
-        st.rerun()
+        from ui.pages.registry import get_page_registry
+
+        st.switch_page(get_page_registry()["overview"])
     else:
         # Show errors
         for error in result.errors:
@@ -130,7 +133,7 @@ def _render_loaded_state() -> None:
         st.markdown(
             f"""
             <div class="metric-card">
-                <div class="metric-value">{meta.name}</div>
+                <div class="metric-value">{html.escape(meta.name)}</div>
                 <div class="metric-label">File Name</div>
             </div>
             """,
@@ -180,7 +183,7 @@ def _render_loaded_state() -> None:
     st.caption(f"Showing first 100 of {meta.rows:,} rows")
     st.dataframe(
         bundle.original_df.head(100),
-        use_container_width=True,
+        width="stretch",
         height=400,
     )
 
@@ -197,7 +200,7 @@ def _render_loaded_state() -> None:
                 "Missing %": f"{series.isna().mean() * 100:.1f}%",
                 "Unique": f"{series.nunique():,}",
             })
-        st.dataframe(col_info, use_container_width=True, hide_index=True)
+        st.dataframe(col_info, width="stretch", hide_index=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -207,7 +210,7 @@ def _render_loaded_state() -> None:
         if st.button(
             "🗑️  Remove & Re-upload",
             type="secondary",
-            use_container_width=True,
+            width="stretch",
             key="remove_dataset_btn",
         ):
             clear_bundle()
@@ -236,12 +239,12 @@ def page() -> None:
         if st.button(
             "🎲  Load Demo Dataset",
             key="upload_demo_btn",
-            use_container_width=False,
+            width="content",
         ):
             from ui.pages.dashboard import _load_demo
             from ui.pages.registry import get_page_registry
 
             _load_demo()
-            st.switch_page(get_page_registry()["dashboard"])
+            st.switch_page(get_page_registry()["overview"])
 
     st.markdown("</div>", unsafe_allow_html=True)

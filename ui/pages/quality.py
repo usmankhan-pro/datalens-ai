@@ -61,13 +61,13 @@ def page() -> None:
             for name, values in quality_result["dimensions"].items()
         ]
     )
-    st.dataframe(dim_df, use_container_width=True, hide_index=True)
+    st.dataframe(dim_df, width="stretch", hide_index=True)
 
     st.subheader("Issues Detected")
     issues = quality_result["issues"]
     if issues:
         issues_df = pd.DataFrame(issues)
-        st.dataframe(issues_df, use_container_width=True, hide_index=True)
+        st.dataframe(issues_df, width="stretch", hide_index=True)
     else:
         st.success("No quality issues were detected in the current dataset.")
 

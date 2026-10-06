@@ -71,12 +71,23 @@ def page() -> None:
         st.markdown("</div>", unsafe_allow_html=True)
         return
 
-    source = st.radio("Dataset source", ["Working Data", "Original Data"], horizontal=True)
+    source = st.radio(
+        "Dataset source",
+        ["Working Data", "Original Data"],
+        horizontal=True,
+        key="report_explorer_source",
+    )
     df = bundle.working_df if source == "Working Data" else bundle.original_df
 
     st.subheader("Filters")
-    search_text = st.text_input("Search text", placeholder="Type a keyword to find matching rows")
-    filter_column = st.selectbox("Filter column", ["None", *df.columns.tolist()])
+    search_text = st.text_input(
+        "Search text",
+        placeholder="Type a keyword to find matching rows",
+        key="report_explorer_search",
+    )
+    filter_column = st.selectbox(
+        "Filter column", ["None", *df.columns.tolist()], key="report_explorer_filter_column"
+    )
     filter_value = None
     numeric_min = None
     numeric_max = None
@@ -84,10 +95,24 @@ def page() -> None:
     if filter_column != "None":
         column = df[filter_column]
         if pd.api.types.is_numeric_dtype(column):
-            numeric_min = st.number_input(f"Minimum {filter_column}", value=float(column.min()), step=1.0)
-            numeric_max = st.number_input(f"Maximum {filter_column}", value=float(column.max()), step=1.0)
+            numeric_min = st.number_input(
+                f"Minimum {filter_column}",
+                value=float(column.min()),
+                step=1.0,
+                key="report_explorer_numeric_min",
+            )
+            numeric_max = st.number_input(
+                f"Maximum {filter_column}",
+                value=float(column.max()),
+                step=1.0,
+                key="report_explorer_numeric_max",
+            )
         else:
-            filter_value = st.text_input(f"Contains in {filter_column}", placeholder="Filter text")
+            filter_value = st.text_input(
+                f"Contains in {filter_column}",
+                placeholder="Filter text",
+                key="report_explorer_filter_value",
+            )
 
     filtered = filter_dataframe(
         df,
@@ -99,5 +124,5 @@ def page() -> None:
     )
 
     st.caption(f"Showing {len(filtered):,} of {len(df):,} rows")
-    st.dataframe(filtered, use_container_width=True, hide_index=True)
+    st.dataframe(filtered, width="stretch", hide_index=True)
     st.markdown("</div>", unsafe_allow_html=True)

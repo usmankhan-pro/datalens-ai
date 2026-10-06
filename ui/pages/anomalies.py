@@ -42,8 +42,16 @@ def page() -> None:
         st.markdown("</div>", unsafe_allow_html=True)
         return
 
-    method = st.selectbox("Detection method", ["iqr", "z", "modified_z", "rolling"])
-    column = st.selectbox("Column", numeric_cols + ["All numeric columns"])
+    method = st.selectbox(
+        "Detection method",
+        ["iqr", "z", "modified_z", "rolling"],
+        key="analysis_anomalies_method",
+    )
+    column = st.selectbox(
+        "Column",
+        numeric_cols + ["All numeric columns"],
+        key="analysis_anomalies_column",
+    )
     selected_column = None if column == "All numeric columns" else column
 
     anomalies = detect_anomalies(df, method=method, column=selected_column)
@@ -55,7 +63,7 @@ def page() -> None:
     anomaly_df = pd.DataFrame(anomalies)
     anomaly_df = anomaly_df.sort_values(["score"], ascending=False)
     st.subheader("Potential anomalies detected")
-    st.dataframe(anomaly_df[["column", "value", "score", "direction", "method"]], use_container_width=True)
+    st.dataframe(anomaly_df[["column", "value", "score", "direction", "method"]], width="stretch")
 
     st.caption("Potential anomaly detected.")
     st.markdown("</div>", unsafe_allow_html=True)

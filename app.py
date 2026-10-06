@@ -1,11 +1,12 @@
 """
-DataLens AI: Intelligent Data Quality & Analytics Platform
+DataLens AI: Rule-Based Data Quality & Analytics Platform
 
 Main application entrypoint. Configures Streamlit page settings,
-injects the theme CSS, builds the sidebar navigation with all 14 pages,
+injects the theme CSS, builds the sidebar navigation with six pages,
 and provides the dark/light theme toggle.
 """
 
+import html
 import streamlit as st
 
 # --- Page Config (must be first Streamlit call) ---
@@ -57,7 +58,7 @@ with st.sidebar:
                     <span style="color: var(--success); font-size: 1.1rem;">●</span>
                     <div>
                         <div style="font-weight: 600; font-size: 0.85rem;">
-                            {bundle.file_meta.name if bundle else 'Dataset'}
+                            {html.escape(bundle.file_meta.name if bundle else 'Dataset')}
                         </div>
                         <div style="font-size: 0.75rem; color: var(--text-muted);">
                             {f'{bundle.file_meta.rows:,} rows × {bundle.file_meta.cols} cols' if bundle else ''}
@@ -90,21 +91,14 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # Theme toggle
-    current_theme = get_theme()
-    theme_icon = "🌙" if current_theme == "dark" else "☀️"
-    theme_label = "Dark Mode" if current_theme == "dark" else "Light Mode"
-
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.markdown(
-            f"<span style='font-size: 0.85rem;'>{theme_icon} {theme_label}</span>",
-            unsafe_allow_html=True,
-        )
-    with col2:
-        if st.button("🔄", key="theme_toggle", help="Toggle dark/light theme"):
+    with st.expander("Settings", expanded=False):
+        current_theme = get_theme()
+        theme_icon = "🌙" if current_theme == "dark" else "☀️"
+        theme_label = "Dark Mode" if current_theme == "dark" else "Light Mode"
+        if st.button(f"{theme_icon} {theme_label}", key="sidebar_theme_toggle"):
             toggle_theme()
             st.rerun()
+        st.caption("All data is processed in memory for this session.")
 
     # Footer
     st.markdown("---")

@@ -42,7 +42,9 @@ def page() -> None:
         st.markdown("</div>", unsafe_allow_html=True)
         return
 
-    selected_col = st.selectbox("Numeric column", numeric_cols)
+    selected_col = st.selectbox(
+        "Numeric column", numeric_cols, key="analysis_statistics_numeric_column"
+    )
     series = df[selected_col]
     stats = describe_numeric(series)
 
@@ -57,14 +59,20 @@ def page() -> None:
         {"Metric": "Skewness", "Value": stats["skewness"]},
         {"Metric": "Kurtosis", "Value": stats["kurtosis"]},
     ])
-    st.dataframe(stats_df, use_container_width=True, hide_index=True)
+    st.dataframe(stats_df, width="stretch", hide_index=True)
     st.write(stats["interpretation"])
 
     categorical_cols = df.select_dtypes(exclude=['number']).columns.tolist()
     if categorical_cols and len(categorical_cols) >= 2:
-        cat_col = st.selectbox("Group column", categorical_cols)
+        cat_col = st.selectbox(
+            "Group column", categorical_cols, key="analysis_statistics_group_column"
+        )
         if df[cat_col].nunique() == 2:
-            other_col = st.selectbox("Numeric comparison column", numeric_cols)
+            other_col = st.selectbox(
+                "Numeric comparison column",
+                numeric_cols,
+                key="analysis_statistics_comparison_column",
+            )
             comparison = infer_group_comparison(df[[cat_col, other_col]].dropna(), cat_col, other_col)
             st.subheader("Group Comparison")
             st.write(comparison["test_name"])

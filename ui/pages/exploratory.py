@@ -40,7 +40,9 @@ def page() -> None:
         st.markdown("</div>", unsafe_allow_html=True)
         return
 
-    selected_col = st.selectbox("Column to explore", df.columns.tolist())
+    selected_col = st.selectbox(
+        "Column to explore", df.columns.tolist(), key="analysis_exploratory_column"
+    )
     ser = df[selected_col]
 
     st.subheader(f"Column: {selected_col}")
@@ -49,6 +51,7 @@ def page() -> None:
     else:
         st.bar_chart(ser.value_counts().head(20))
 
-    st.dataframe(ser.value_counts().head(20).reset_index().rename(columns={"index": "value", selected_col: "count"}), use_container_width=True)
+    value_counts = ser.value_counts().head(20).rename_axis("value").reset_index(name="count")
+    st.dataframe(value_counts, width="stretch")
 
     st.markdown("</div>", unsafe_allow_html=True)

@@ -77,6 +77,6 @@ def page() -> None:
                 "ID": item["is_id"],
             }
         )
-    st.dataframe(pd.DataFrame(column_rows), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(column_rows), width="stretch", hide_index=True)
 
     st.markdown("</div>", unsafe_allow_html=True)

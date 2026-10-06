@@ -48,8 +48,8 @@ def page() -> None:
 
     st.caption("⚠️ Correlation does not imply causation.")
     st.subheader("Pearson Correlation")
-    st.dataframe(pearson, use_container_width=True)
+    st.dataframe(pearson, width="stretch")
     st.subheader("Spearman Correlation")
-    st.dataframe(spearman, use_container_width=True)
+    st.dataframe(spearman, width="stretch")
 
     st.markdown("</div>", unsafe_allow_html=True)

@@ -11,4 +11,3 @@ xlsxwriter==3.2.9
 reportlab==5.0.1
 kaleido==0.2.1
 chardet==7.6.0
-pytest==9.1.1
