@@ -1,9 +1,9 @@
 """
-DataLens AI: Rule-Based Data Quality & Analytics Platform
+Automated Data Quality & Analytics Platform
 
-Main application entrypoint. Configures Streamlit page settings,
-injects the theme CSS, builds the sidebar navigation with six pages,
-and provides the dark/light theme toggle.
+Main application entrypoint for the platform. It configures Streamlit
+page settings, injects the theme CSS, builds the sidebar navigation,
+and provides a dark/light mode toggle for the analytics workflow.
 """
 
 import html
@@ -11,8 +11,8 @@ import streamlit as st
 
 # --- Page Config (must be first Streamlit call) ---
 st.set_page_config(
-    page_title="DataLens AI",
-    page_icon="🔍",
+    page_title="Automated Data Quality & Analytics Platform",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -34,12 +34,12 @@ with st.sidebar:
     st.markdown(
         """
         <div style="text-align: center; padding: 0.5rem 0 1rem 0;">
-            <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">🔍</div>
-            <div style="font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em;">
-                DataLens AI
+            <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">�</div>
+            <div style="font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.4;">
+                Automated Data Quality<br>& Analytics Platform
             </div>
             <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">
-                Intelligent Data Analytics
+                DataLens AI
             </div>
         </div>
         """,
