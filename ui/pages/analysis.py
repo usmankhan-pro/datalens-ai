@@ -1,12 +1,13 @@
-"""Analysis page composing the existing analysis tools into tabs."""
+"""Analysis page composing the EDA engine and analytical tools into tabs."""
 
 import streamlit as st
 
 
 def page() -> None:
-    from ui.pages import anomalies, correlations, exploratory, kpis, statistics
+    from ui.pages import eda, anomalies, correlations, exploratory, kpis, statistics
 
     pages = [
+        ("EDA Deep Dive", eda),
         ("Exploratory", exploratory),
         ("Statistics", statistics),
         ("Correlations", correlations),

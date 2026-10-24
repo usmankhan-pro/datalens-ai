@@ -238,3 +238,68 @@ def validate_dataframe(
     df.columns = [str(col).strip() for col in df.columns]
 
     return df, warnings, errors
+
+
+def detect_header_row(file_bytes: bytes, encoding: str = "utf-8", delimiter: str = ",") -> int:
+    """
+    Detect the most likely header row index (0-indexed) by inspecting the first 10 rows.
+
+    Heuristics:
+    - Row with highest ratio of non-empty text strings
+    - Low numeric count
+    - No duplicate names
+    """
+    try:
+        text = file_bytes[:10000].decode(encoding, errors="ignore")
+        lines = [line.strip() for line in text.splitlines() if line.strip()][:10]
+        if not lines:
+            return 0
+
+        best_row = 0
+        best_score = -1.0
+
+        for idx, line in enumerate(lines):
+            # Parse row using csv reader
+            reader = csv.reader([line], delimiter=delimiter)
+            fields = next(reader, [])
+            if not fields:
+                continue
+            # Calculate header quality score
+            non_empty = [f.strip() for f in fields if f.strip()]
+            if not non_empty:
+                continue
+            text_fields = sum(1 for f in non_empty if not f.replace(".", "", 1).replace("-", "", 1).isdigit())
+            unique_ratio = len(set(non_empty)) / len(non_empty)
+            score = (text_fields / len(non_empty)) * 0.6 + unique_ratio * 0.4
+
+            if score > best_score and len(non_empty) >= 2:
+                best_score = score
+                best_row = idx
+
+        return best_row
+    except Exception:
+        return 0
+
+
+def format_plain_language_summary(meta: dict) -> str:
+    """Produce a concise, plain-language summary of the loaded file."""
+    name = meta.get("name", "Uploaded file")
+    size_bytes = meta.get("size_bytes", 0)
+    size_str = f"{size_bytes / 1024:.1f} KB" if size_bytes < 1024 * 1024 else f"{size_bytes / (1024 * 1024):.1f} MB"
+    ext = meta.get("extension", "").upper().lstrip(".")
+    rows = meta.get("rows", 0)
+    cols = meta.get("cols", 0)
+    enc = meta.get("encoding", "UTF-8")
+    delim = meta.get("delimiter", ",")
+    sheet = meta.get("sheet_name")
+
+    summary_parts = [f"**{name}** ({size_str}) is a {ext} file"]
+    if enc:
+        summary_parts.append(f"encoded in **{enc}**")
+    if delim and ext == "CSV":
+        summary_parts.append(f"with delimiter `{repr(delim)}`")
+    if sheet:
+        summary_parts.append(f"reading sheet **'{sheet}'**")
+
+    summary_text = " ".join(summary_parts) + f". It contains **{rows:,} rows** and **{cols} columns** ready for analytics."
+    return summary_text

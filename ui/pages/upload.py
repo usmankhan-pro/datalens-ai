@@ -76,6 +76,11 @@ def _process_uploaded_file(uploaded_file) -> None:
         )
 
     if result.success:
+        from core.ingestion.validators import detect_header_row, detect_encoding, detect_delimiter
+        enc = result.file_meta.get("encoding") or "utf-8"
+        delim = result.file_meta.get("delimiter") or ","
+        header_row = detect_header_row(file_content, encoding=enc, delimiter=delim) if ext == "csv" else 0
+
         # Store in session state
         meta = FileMeta(
             name=filename,
@@ -83,9 +88,10 @@ def _process_uploaded_file(uploaded_file) -> None:
             rows=result.file_meta.get("rows", len(result.df)),
             cols=result.file_meta.get("cols", len(result.df.columns)),
             extension=f".{ext}",
-            encoding=result.file_meta.get("encoding"),
-            delimiter=result.file_meta.get("delimiter"),
+            encoding=enc,
+            delimiter=delim,
             sheet_name=result.file_meta.get("sheet_name"),
+            header_row=header_row,
         )
 
         bundle = DatasetBundle(
@@ -97,7 +103,9 @@ def _process_uploaded_file(uploaded_file) -> None:
         set_bundle(bundle)
         from ui.pages.registry import get_page_registry
 
-        st.switch_page(get_page_registry()["overview"])
+        # Navigate directly to context intake for goal-aware workflow
+        target_page = get_page_registry().get("context", get_page_registry()["overview"])
+        st.switch_page(target_page)
     else:
         # Show errors
         for error in result.errors:
@@ -126,6 +134,16 @@ def _render_loaded_state() -> None:
 
     label = "Synthetic Demo Dataset" if bundle.is_demo else meta.name
     st.success(f"✅ Dataset loaded successfully: **{label}**")
+
+    # Plain-language file summary
+    from core.ingestion.validators import format_plain_language_summary
+    st.info(f"📄 {format_plain_language_summary(meta.__dict__)}")
+
+    # Quick link to Context Intake
+    from ui.pages.registry import get_page_registry
+    if "context" in get_page_registry():
+        if st.button("🎯 Proceed to Context Intake ➜", type="primary", key="upload_go_to_context_btn"):
+            st.switch_page(get_page_registry()["context"])
 
     # File metadata cards
     col1, col2, col3, col4 = st.columns(4)

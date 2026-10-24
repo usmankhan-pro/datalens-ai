@@ -1,0 +1,21 @@
+patient_id,age,gender,systolic_bp,cholesterol,diagnosis,treatment_outcome,notes
+PT-1001,45,F,120,195,Hypertension,Improved,Normal response
+PT-1002,52,M,145,240,hypertension,Stable,Diet advised
+PT-1003,38,F,115,180,Healthy,N/A,Annual checkup
+PT-1004,61,M,160,280,DIABETES,Improved,Medication adjusted
+PT-1005,999,M,135,210,Diabetes,Stable,Missing true age
+PT-1006,29,F,110,165,healthy,N/A,-
+PT-1007,74,F,175,310,Hypertension,Worsened,High risk
+PT-1008,48,M,130,225,Asthma,Improved,Inhaler prescribed
+PT-1009,56,F,140,250,asthma,Stable,?
+PT-1010,67,M,155,260,Diabetes,Improved,Good adherence
+PT-1011,140,F,125,200,Hypertension,Stable,Age outlier typo
+PT-1012,35,M,118,175,Healthy,N/A,None
+PT-1013,42,F,128,215,Hypertension,Improved,Exercise routine
+PT-1014,58,M,150,270,Diabetes,Improved,Monitoring required
+PT-1015,63,F,165,295,Hypertension,Worsened,Specialist referral
+PT-1016,31,M,112,170,Healthy,N/A,Routine
+PT-1017,49,F,134,230,Asthma,Improved,Follow-up 3mo
+PT-1018,55,M,142,245,Diabetes,Stable,Weight stable
+PT-1019,68,F,170,305,Hypertension,Improved,Med changed
+PT-1020,44,M,122,190,Healthy,N/A,Clean record

@@ -1,113 +1,93 @@
-# Automated Data Quality and Analytics Platform
+# Automated Data Quality & Analytics Platform (DataLens AI)
 
-The Automated Data Quality and Analytics Platform is a rule-based data operations solution for profiling, validating, cleaning, and analyzing tabular datasets. It helps teams assess data health, detect anomalies, uncover trends, and turn raw data into actionable business insights through a streamlined Streamlit interface.
+DataLens AI is a transparent, explainable, and rule-based data operations platform that transforms raw, messy tabular datasets into analytics-ready assets through an end-to-end, goal-aware workflow.
 
-This project is designed for organizations that need a transparent, explainable, and auditable analytics workflow without relying on opaque black-box models. It combines ingestion, validation, profiling, quality scoring, anomaly detection, KPI tracking, and reporting in a single platform.
+Zero fabricated numbers. Every metric, correlation, outlier boundary, and insight is strictly computed in memory from your real DataFrame.
 
-## Live Demo
+---
 
-[Open the platform demo](https://your-streamlit-app.streamlit.app/) (placeholder link; replace with the deployed app URL).
-
-## Screenshots
-
-- Home: `screenshots/home.png` (placeholder)
-- Overview: `screenshots/overview.png` (placeholder)
-- Analysis: `screenshots/analysis.png` (placeholder)
-
-## Key Features
-
-- CSV, Excel, and JSON ingestion with validation and metadata capture
-- Column profiling and automated data quality scoring
-- Cleaning workflow with traceable, auditable transformations
-- Descriptive statistics, correlations, and trend summaries
-- Anomaly detection for unusual values and outliers
-- KPI monitoring and business-facing insights
-- Exportable reports in PDF, Excel, and CSV formats
-- Explainable rule-based analysis for trustworthy operational decisions
-
-## How the Quality Score Works
-
-The quality score is calculated from rule-based checks and detected issue patterns across the dataset. The scoring methodology, dimensions, and interpretation are documented in [METHODOLOGY.md](METHODOLOGY.md).
-
-## Why This Platform
-
-Modern data teams need more than static dashboards. They need a practical system for:
-
-- validating incoming data before downstream reporting
-- reducing manual cleanup effort with guided workflows
-- identifying quality issues early in the data lifecycle
-- measuring business performance using KPI and trend analysis
-- producing evidence-based insights with clear reporting
-
-## Limitations
-
-- Data is processed in memory during the session and is not persisted by the application.
-- Very large datasets may require additional memory and may affect processing speed.
-- Detected anomalies are potential issues for review, not proof of a business problem.
-- Correlation does not imply causation.
-- Quality scores reflect the rules and fields available in the platform and should be used as decision support rather than absolute truth.
-
-## Roadmap
-
-- Expand rule libraries and validation coverage
-- Evaluate optional machine-learning anomaly methods alongside the current rule-based engine
-- Improve export customization and reporting templates
-
-## Local Setup
-
-Use Python 3.12 to match the deployment runtime:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-Install development dependencies and run the test suite:
-
-```bash
-pip install -r requirements-dev.txt
-python -m pytest -q
-```
-
-## Deployment
-
-Deploy on Streamlit Community Cloud using Python 3.12 and set the main app file to `app.py`. The configured upload limit is 200 MB.
-
-For Docker:
-
-```bash
-docker build -t automated-data-quality-platform .
-docker run -p 8501:8501 automated-data-quality-platform
-```
-
-## Architecture
+## End-to-End Goal-Aware Workflow
 
 ```mermaid
 flowchart LR
-    A[Upload / Load Data] --> B[Profile + Validate]
-    B --> C[Quality Scoring]
-    B --> D[Clean + Transform]
-    B --> E[Statistics + Correlation]
-    B --> F[Anomalies + Trends]
-    B --> G[KPIs + Insights]
-    C --> H[Reports + Export]
-    D --> I[Streamlit UI]
-    E --> I
-    F --> I
-    G --> I
-    H --> I
+    A[1. Smart Upload] --> B[2. Context Intake]
+    B --> C[3. Raw Profile]
+    C --> D[4. Action Plan]
+    D --> E[5. Cleaning Pipeline]
+    E --> F[6. EDA Deep Dive]
+    F --> G[7. Readiness Verdict]
+    G --> H[8. Export & Recipes]
 ```
 
-## Project Structure
+1. **Smart Upload**: Auto-detects character encoding, CSV delimiters, Excel sheet selection, and header row offset. Generates an instant plain-language file summary card.
+2. **Context Intake**: Gathers analytical intent (Machine Learning, Reporting, Business Analysis, Research), target variable, and consumer audience. Runs rule-based domain detection from column names (Finance, Healthcare, E-Commerce, Marketing, HR, SaaS) with user confirmation.
+3. **Raw Profile & Quality Scoring**: Inspects structural nulls, data types, uniqueness, validity, and consistency to establish baseline quality health.
+4. **Goal-Aware Action Plan (`core/planner/`)**: Maps detected issues + user context into an ordered cleaning roadmap with *What*, *Why*, *Severity*, *Risk Label* (`safe`, `review`, `risky`), and exact *Quality-Score Impact* computed by executing each transformation on an in-memory copy.
+5. **8-Stage Cleaning Pipeline (`core/cleaning/`)**:
+   - Order: `Structure` ➜ `Types` ➜ `Text` ➜ `Invalid/Placeholders` ➜ `Duplicates` ➜ `Missing Values` ➜ `Outliers` ➜ `Validation`
+   - **Auto-clean**: One-click execution of all safe operations without manual intervention.
+   - **Approval Gates**: Risky steps (imputations, column pruning, outlier clipping/dropping) strictly require user consent.
+   - **Versioned Undo Stack**: Reversible in-memory snapshots; original uploaded data is never mutated.
+   - **Audit Log**: Live tracking of step index, operation, stage, rows affected, parameters, and timestamps.
+6. **Exploratory Data Analysis (`core/eda/`)**:
+   - Univariate statistics (distributions, cardinality, percentiles, skewness, kurtosis).
+   - Missing-value co-occurrence matrices and row distributions.
+   - Outlier fencing (IQR fences & Z-scores).
+   - Bivariate correlations (Pearson linear & Spearman monotonic rank) and group comparisons with a mandatory minimum of 5 observations per group ($n \ge 5$) plus ANOVA F-tests.
+   - Target variable analysis (regression correlations or classification class imbalance ratio).
+   - Time trends across detected datetime dimensions.
+   - **Top 5 Plain-Language Insights**: Dynamically generated using real numbers.
+7. **Goal Readiness Verdict (`core/verdict/`)**:
+   - Deterministic pass/warn/fail checklist tailored to your declared goal (e.g. data leakage & class balance for ML; deduplication and date consistency for Reporting).
+   - Decision support disclaimer noting scores are decision aids rather than mathematical proof.
+8. **Export & Recipes (`core/export/` & `core/recipes/`)**:
+   - **Before vs. After Comparison**: Rows, columns, missingness %, duplicates, and quality score diffs.
+   - **Cleaned Data Downloads**: CSV, Excel (.xlsx), JSON.
+   - **Reports & Audit Log**: Comprehensive PDF report, multi-sheet Excel workbook, cleaning log (CSV/JSON).
+   - **Reproducible Python Script**: Auto-generated standalone Python/pandas script replicating all applied operations.
+   - **Cleaning Recipes**: Export and import `.json` recipe pipelines to automate future files sharing identical schemas.
 
-- `app.py` – Streamlit application entry point
-- `core/` – data ingestion, profiling, quality, statistics, trends, and reporting logic
-- `ui/` – page layouts, navigation, and dashboard presentation
-- `data/` – demo datasets and generated sample data
-- `tests/` – automated validation for ingestion, profiling, cleaning, and analytics workflows
+---
+
+## Messy Sample Datasets (`data/`)
+
+Pre-packaged dirty datasets available for testing and demos:
+* `data/sample_ecommerce_dirty.csv`: E-commerce orders with currency strings (`$1,250.00`), negative refunds, duplicate orders, and sentinel placeholders (`N/A`, `-`).
+* `data/sample_churn_ml.csv`: Customer churn dataset with leaky ID features, sentinel ages (`999`), and 4:1 class imbalance.
+* `data/sample_financial_reporting.xlsx`: Multi-sheet workbook with unformatted revenues, blank headers, and unparsed dates.
+* `data/sample_patient_research.csv`: Clinical cohort with extreme physiological outliers (`age=140`), mixed diagnosis casing, and missing outcomes.
+* `data/sample_marketing_leads.json`: Marketing campaigns with string casing variants (`FB`, `Facebook`, `facebook `) and conversion rates.
+
+---
+
+## Local Setup
+
+```bash
+# 1. Clone & create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 2. Install dependencies
+pip install -r requirements-dev.txt
+
+# 3. Run application
+streamlit run app.py
+
+# 4. Run automated test suite
+pytest -v
+```
+
+---
+
+## Architecture Principles
+
+* **Logic in `core/`**: Pure functions, small typed APIs, dataclasses, zero Streamlit dependencies in analytical engines.
+* **Thin UI in `ui/pages/`**: Streamlit pages focused purely on rendering components, charts, and handling user triggers.
+* **Centralized State in `core/utils/state.py`**: Immutable `original_df`, mutable `working_df`, versioned snapshot stack for undo, and audit logs stored in session state.
+* **No Fabricated Numbers**: All metrics derived directly from real DataFrame computations.
+
+---
 
 ## License
 
-This project is released under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).

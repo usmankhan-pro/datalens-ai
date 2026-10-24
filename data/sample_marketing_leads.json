@@ -1,0 +1,14 @@
+[
+  {"lead_id": "LD-001", "lead_source": "Facebook", "campaign_name": "Summer_Promo", "spend": "$450.00", "clicks": 120, "conversions": 15, "bounce_rate": "35%"},
+  {"lead_id": "LD-002", "lead_source": "FB", "campaign_name": "Summer_Promo", "spend": "$520.00", "clicks": 140, "conversions": 18, "bounce_rate": "32%"},
+  {"lead_id": "LD-003", "lead_source": "Google Ads", "campaign_name": "Search_Brand", "spend": "$1200.00", "clicks": 450, "conversions": 62, "bounce_rate": "22%"},
+  {"lead_id": "LD-004", "lead_source": "google", "campaign_name": "Search_Generic", "spend": "$890.00", "clicks": 280, "conversions": 31, "bounce_rate": "41%"},
+  {"lead_id": "LD-005", "lead_source": "LinkedIn", "campaign_name": "B2B_Outreach", "spend": "$750.00", "clicks": 95, "conversions": 8, "bounce_rate": "55%"},
+  {"lead_id": "LD-006", "lead_source": "facebook ", "campaign_name": "Summer_Promo", "spend": "$310.00", "clicks": 80, "conversions": 9, "bounce_rate": "38%"},
+  {"lead_id": "LD-007", "lead_source": "Twitter", "campaign_name": "Product_Launch", "spend": "$600.00", "clicks": 210, "conversions": 12, "bounce_rate": "49%"},
+  {"lead_id": "LD-008", "lead_source": "Organic", "campaign_name": "SEO_Blog", "spend": "$0.00", "clicks": 850, "conversions": 115, "bounce_rate": "18%"},
+  {"lead_id": "LD-009", "lead_source": "Email", "campaign_name": "Newsletter_Jan", "spend": "$150.00", "clicks": 320, "conversions": 45, "bounce_rate": "15%"},
+  {"lead_id": "LD-010", "lead_source": "Referral", "campaign_name": "Partner_Co", "spend": "$250.00", "clicks": 110, "conversions": 20, "bounce_rate": "28%"},
+  {"lead_id": "LD-011", "lead_source": "Google Ads", "campaign_name": "Search_Brand", "spend": "$1100.00", "clicks": 420, "conversions": 58, "bounce_rate": "24%"},
+  {"lead_id": "LD-012", "lead_source": "FB", "campaign_name": "Retargeting_V1", "spend": "$480.00", "clicks": 130, "conversions": 16, "bounce_rate": "30%"}
+]
