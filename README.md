@@ -1,93 +1,226 @@
-# Automated Data Quality & Analytics Platform (DataLens AI)
+# DataLens AI
 
-DataLens AI is a transparent, explainable, and rule-based data operations platform that transforms raw, messy tabular datasets into analytics-ready assets through an end-to-end, goal-aware workflow.
+**Automated Dataset Quality Assessment, Data Cleaning, and Exploratory Data Analysis Platform**
 
-Zero fabricated numbers. Every metric, correlation, outlier boundary, and insight is strictly computed in memory from your real DataFrame.
+Upload a CSV or Excel file, understand its quality score, inspect and correct data issues safely, explore relevant variables, discover evidence-backed insights, and export reproducible results — all through a clear and reliable Streamlit interface. Data stays in memory; nothing is written to disk.
 
 ---
 
-## End-to-End Goal-Aware Workflow
+## Problem Statement
 
-```mermaid
-flowchart LR
-    A[1. Smart Upload] --> B[2. Context Intake]
-    B --> C[3. Raw Profile]
-    C --> D[4. Action Plan]
-    D --> E[5. Cleaning Pipeline]
-    E --> F[6. EDA Deep Dive]
-    F --> G[7. Readiness Verdict]
-    G --> H[8. Export & Recipes]
+Analysts spend most of their time cleaning and understanding data rather than analyzing it. DataLens AI automates the repetitive parts — profiling, quality scoring, issue detection, cleaning, and EDA — while keeping every analytical decision transparent and user-controlled. Nothing is applied automatically without approval.
+
+---
+
+## Key Features
+
+| Stage | What you can do |
+|-------|----------------|
+| **Upload** | Drag-and-drop CSV or Excel (XLSX/XLSM). See file name, size, rows, columns, detected format, and a preview. |
+| **Validate** | Clear error messages for empty, malformed, or unreadable files. Duplicate column names and all-empty columns are flagged. |
+| **Quality Score** | Transparent 0–100 score across five dimensions: Completeness, Validity, Consistency, Uniqueness, Structural Quality. Configurable weights. |
+| **Column Profiling** | Per-column statistics for numeric, categorical, datetime, boolean, and identifier-like columns. |
+| **Cleaning Studio** | Preview-then-apply cleaning: duplicates, missing values, type conversion, text cleaning, outlier handling. Full audit trail with undo/reset. |
+| **EDA** | Univariate, bivariate, and multivariate analysis with Plotly charts. Automatic chart selection based on column types. |
+| **Insights** | Evidence-backed observations with severity, recommended actions, and limitations. |
+| **Export** | Download cleaned data (CSV/Excel), cleaning audit log, quality report, and before/after comparison. |
+
+---
+
+## Technology Stack
+
+- **Python 3.10+**
+- **Streamlit** — application interface
+- **pandas** — data manipulation
+- **NumPy** — numerical computing
+- **matplotlib / seaborn** — static charts (legacy visualizations)
+- **Plotly** — interactive charts (new EDA visualizations)
+- **openpyxl** — Excel read/write
+- **pytest** — testing
+
+---
+
+## Architecture
+
+```
+DataLensAI/
+├── app.py                      # Streamlit application entry point
+├── requirements.txt            # Runtime dependencies
+├── requirements-dev.txt        # Test dependencies
+├── README.md                   # This file
+├── .gitignore
+├── LICENSE
+├── config/
+│   └── settings.py             # Quality weights, thresholds, resource limits
+├── data/
+│   └── telco_churn.csv         # Telco churn demo dataset
+├── docs/
+│   └── methodology.md          # Quality score formula and methods
+├── src/
+│   ├── data/
+│   │   ├── __init__.py
+│   │   └── schema_detector.py  # Column type and schema detection
+│   ├── quality/
+│   │   ├── __init__.py
+│   │   ├── quality_score.py    # 0-100 quality scoring engine
+│   │   ├── validation.py       # Validation rules and checks
+│   │   └── issue_detection.py  # Structured quality findings
+│   ├── cleaning/
+│   │   ├── __init__.py
+│   │   ├── audit.py            # Audit trail record types
+│   │   ├── missing_values.py   # Missing-value detection and imputation
+│   │   ├── duplicates.py       # Duplicate-row detection and removal
+│   │   ├── data_types.py       # Type detection and safe conversion
+│   │   ├── outliers.py         # IQR and Z-score outlier detection
+│   │   ├── text_cleaning.py    # Text normalization and cleaning
+│   │   └── cleaning_pipeline.py# Orchestrated cleaning with undo/reset
+│   ├── analysis/
+│   │   ├── __init__.py
+│   │   ├── descriptive.py      # Dataset and column profiles
+│   │   ├── univariate.py       # Single-column summaries
+│   │   ├── bivariate.py        # Two-column analysis
+│   │   ├── multivariate.py     # Correlation matrix, pivots, grouped summaries
+│   │   ├── correlation.py      # Pearson and Spearman correlations
+│   │   └── recommendations.py  # Evidence-backed insights and recommendations
+│   ├── visualization/
+│   │   ├── __init__.py
+│   │   ├── charts.py           # Plotly chart builders
+│   │   └── chart_selector.py   # Automatic chart recommendation
+│   ├── reporting/
+│   │   ├── __init__.py
+│   │   ├── report_generator.py # Report assembly
+│   │   └── export_manager.py   # Download-ready export bytes
+│   └── utils/
+│       ├── __init__.py
+│       └── formatting.py       # Display formatting helpers
+├── tests/
+│   ├── test_loader.py
+│   ├── test_profiling.py
+│   ├── test_quality_score.py
+│   ├── test_cleaning.py
+│   └── test_analysis.py
+├── sample_data/
+└── docs/
+    └── methodology.md
 ```
 
-1. **Smart Upload**: Auto-detects character encoding, CSV delimiters, Excel sheet selection, and header row offset. Generates an instant plain-language file summary card.
-2. **Context Intake**: Gathers analytical intent (Machine Learning, Reporting, Business Analysis, Research), target variable, and consumer audience. Runs rule-based domain detection from column names (Finance, Healthcare, E-Commerce, Marketing, HR, SaaS) with user confirmation.
-3. **Raw Profile & Quality Scoring**: Inspects structural nulls, data types, uniqueness, validity, and consistency to establish baseline quality health.
-4. **Goal-Aware Action Plan (`core/planner/`)**: Maps detected issues + user context into an ordered cleaning roadmap with *What*, *Why*, *Severity*, *Risk Label* (`safe`, `review`, `risky`), and exact *Quality-Score Impact* computed by executing each transformation on an in-memory copy.
-5. **8-Stage Cleaning Pipeline (`core/cleaning/`)**:
-   - Order: `Structure` ➜ `Types` ➜ `Text` ➜ `Invalid/Placeholders` ➜ `Duplicates` ➜ `Missing Values` ➜ `Outliers` ➜ `Validation`
-   - **Auto-clean**: One-click execution of all safe operations without manual intervention.
-   - **Approval Gates**: Risky steps (imputations, column pruning, outlier clipping/dropping) strictly require user consent.
-   - **Versioned Undo Stack**: Reversible in-memory snapshots; original uploaded data is never mutated.
-   - **Audit Log**: Live tracking of step index, operation, stage, rows affected, parameters, and timestamps.
-6. **Exploratory Data Analysis (`core/eda/`)**:
-   - Univariate statistics (distributions, cardinality, percentiles, skewness, kurtosis).
-   - Missing-value co-occurrence matrices and row distributions.
-   - Outlier fencing (IQR fences & Z-scores).
-   - Bivariate correlations (Pearson linear & Spearman monotonic rank) and group comparisons with a mandatory minimum of 5 observations per group ($n \ge 5$) plus ANOVA F-tests.
-   - Target variable analysis (regression correlations or classification class imbalance ratio).
-   - Time trends across detected datetime dimensions.
-   - **Top 5 Plain-Language Insights**: Dynamically generated using real numbers.
-7. **Goal Readiness Verdict (`core/verdict/`)**:
-   - Deterministic pass/warn/fail checklist tailored to your declared goal (e.g. data leakage & class balance for ML; deduplication and date consistency for Reporting).
-   - Decision support disclaimer noting scores are decision aids rather than mathematical proof.
-8. **Export & Recipes (`core/export/` & `core/recipes/`)**:
-   - **Before vs. After Comparison**: Rows, columns, missingness %, duplicates, and quality score diffs.
-   - **Cleaned Data Downloads**: CSV, Excel (.xlsx), JSON.
-   - **Reports & Audit Log**: Comprehensive PDF report, multi-sheet Excel workbook, cleaning log (CSV/JSON).
-   - **Reproducible Python Script**: Auto-generated standalone Python/pandas script replicating all applied operations.
-   - **Cleaning Recipes**: Export and import `.json` recipe pipelines to automate future files sharing identical schemas.
-
 ---
 
-## Messy Sample Datasets (`data/`)
+## Installation
 
-Pre-packaged dirty datasets available for testing and demos:
-* `data/sample_ecommerce_dirty.csv`: E-commerce orders with currency strings (`$1,250.00`), negative refunds, duplicate orders, and sentinel placeholders (`N/A`, `-`).
-* `data/sample_churn_ml.csv`: Customer churn dataset with leaky ID features, sentinel ages (`999`), and 4:1 class imbalance.
-* `data/sample_financial_reporting.xlsx`: Multi-sheet workbook with unformatted revenues, blank headers, and unparsed dates.
-* `data/sample_patient_research.csv`: Clinical cohort with extreme physiological outliers (`age=140`), mixed diagnosis casing, and missing outcomes.
-* `data/sample_marketing_leads.json`: Marketing campaigns with string casing variants (`FB`, `Facebook`, `facebook `) and conversion rates.
+### Windows PowerShell
 
----
+```powershell
+# Create and activate virtual environment
+py -m venv .venv
+.venv\Scripts\Activate.ps1
 
-## Local Setup
+# Install dependencies
+python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
+
+# Launch the application
+streamlit run app.py
+```
+
+### macOS / Linux
 
 ```bash
-# 1. Clone & create virtual environment
+# Create and activate virtual environment
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 
-# 2. Install dependencies
-pip install -r requirements-dev.txt
+# Install dependencies
+python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
 
-# 3. Run application
+# Launch the application
 streamlit run app.py
-
-# 4. Run automated test suite
-pytest -v
 ```
 
 ---
 
-## Architecture Principles
+## Supported File Formats
 
-* **Logic in `core/`**: Pure functions, small typed APIs, dataclasses, zero Streamlit dependencies in analytical engines.
-* **Thin UI in `ui/pages/`**: Streamlit pages focused purely on rendering components, charts, and handling user triggers.
-* **Centralized State in `core/utils/state.py`**: Immutable `original_df`, mutable `working_df`, versioned snapshot stack for undo, and audit logs stored in session state.
-* **No Fabricated Numbers**: All metrics derived directly from real DataFrame computations.
+| Format | Extensions | Notes |
+|--------|-----------|-------|
+| CSV | `.csv` | UTF-8, auto delimiter detection, blank strings normalized to missing |
+| Excel | `.xlsx`, `.xlsm` | First worksheet, `openpyxl` engine |
+
+---
+
+## Sample Workflow
+
+1. **Upload** a CSV or Excel file, or click "Use demo data (Telco churn)".
+2. **Overview** — Review row counts, column dtypes, missing values, duplicates, memory usage, and sample rows.
+3. **Quality** — View the 0–100 quality score, dimension breakdown, and ranked issues.
+4. **Cleaning Studio** — Preview and apply cleaning operations one at a time. Use Undo/Reset to experiment safely.
+5. **EDA** — Explore distributions, correlations, and bivariate relationships with interactive Plotly charts.
+6. **Insights** — Read evidence-backed observations with recommended actions.
+7. **Export** — Download the cleaned dataset, cleaning audit log, and quality report.
+
+---
+
+## Quality Score
+
+The score is 0–100, computed as a weighted average of five dimensions:
+
+| Dimension | Weight | What it measures |
+|-----------|--------|------------------|
+| Completeness | 25% | Percentage of non-missing cells |
+| Validity | 25% | Text columns storing numeric or date values |
+| Consistency | 20% | Case and formatting inconsistencies in text columns |
+| Uniqueness | 15% | Percentage of non-duplicate rows |
+| Structural Quality | 15% | Empty, constant, or duplicate-named columns |
+
+Interpretation bands: **Excellent** (>=85), **Good** (>=70), **Needs Improvement** (>=50), **Poor** (<50).
+
+Weights and thresholds are configurable in `config/settings.py`. A high score does **not** prove accuracy, bias-freedom, or fitness for a specific analytical objective.
+
+---
+
+## Data-Cleaning Methodology
+
+- **Source data is immutable.** All cleaning works on a managed working copy.
+- **Preview before apply.** Every operation shows before/after statistics and requires confirmation.
+- **Audit trail.** Each operation records: step, column, operation, rows affected, parameters, before/after stats, success status, warnings, and timestamp.
+- **Undo/Reset.** Revert to any previous state or restore the original data.
+- **No automatic imputation.** Missing values are never filled without user-selected strategy per column.
+- **No automatic outlier removal.** Outliers are flagged; the user chooses cap, remove, flag, or ignore.
+
+---
+
+## Testing
+
+```powershell
+pytest -q
+```
+
+Tests cover: clean datasets, missing values, duplicate rows, repeated legitimate values, incorrect numeric/datetime values, empty datasets, duplicate column names, mixed data types, outliers, small datasets, correlation with missing values, invalid uploads, and export round-trips.
+
+---
+
+## Privacy Considerations
+
+- All data is processed in memory only.
+- Uploaded datasets are not written to disk.
+- No data is sent to external APIs or services.
+- No credentials or secrets are stored in source code.
+- The application works entirely offline.
+
+---
+
+## Future Improvements
+
+- Larger dataset support (chunked processing, sampling)
+- Additional file formats (JSON, Parquet, database connections)
+- Reusable cleaning pipelines (save/load configurations)
+- Optional AI-generated explanations (local LLM, opt-in)
+- Multi-user deployment with authentication
+- Scheduled reporting and automated data quality monitoring
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+MIT License. See `LICENSE` for details.
