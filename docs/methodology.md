@@ -1,6 +1,6 @@
-# DataLens AI — Methodology
+# DataFlow Analytics — Methodology
 
-This document explains the quality score formula, dimension weights, missing-data handling, duplicate detection, outlier methods, and limitations of the DataLens AI analysis engine.
+This document explains the quality score formula, dimension weights, missing-data handling, duplicate detection, outlier methods, and limitations of the DataFlow Analytics analysis engine.
 
 ---
 
@@ -40,6 +40,13 @@ Weights sum to 100%. They are product conventions, not scientific standards, and
 - **Missing definition:** `NaN`, `None`, `pd.NA`, and blank/whitespace-only strings (after normalization)
 - **Severity:** HIGH (>=50% missing), MEDIUM (>=20%), LOW (>0%), NONE (0%)
 - **Limitation:** Blank strings and placeholders are only treated as missing if they were normalized during loading. Otherwise they count as present.
+
+The loader normalizes cells containing only whitespace to missing. Configured
+text placeholders (such as `N/A`, `unknown`, or `--`) are counted by missing-
+value detection and can be handled in the Cleaning workspace, but remain
+ordinary string values in the quality-score completeness calculation until the
+user explicitly handles them. The score uses pandas null values for its
+missing-cell numerator rather than silently rewriting source values.
 
 #### Validity
 
@@ -127,25 +134,45 @@ Missing values are detected as:
 
 ---
 
-## 3. Duplicate Detection
+## 3. User-Configured Validation
 
-### 3.1 Exact Duplicate Rows
+The Data Quality workspace allows the user to set the maximum missing-value
+percentage per column and maximum exact-duplicate row percentage used by
+dataset validation checks. The Data Cleaning workspace also supports custom
+column rules:
+
+- **Numeric range:** numeric non-null values are checked against inclusive
+  minimum and maximum bounds. Values outside either supplied bound are
+  violations; missing values are counted separately and are not violations
+  for this rule.
+- **Allowed values:** non-null values are checked for exact string membership
+  in a user-supplied list. Matching is case-sensitive; normalize text first
+  when case-insensitive matching is desired.
+
+Custom rules report checked and violating row counts and do not mutate the
+working data or automatically reject rows.
+
+---
+
+## 4. Duplicate Detection
+
+### 4.1 Exact Duplicate Rows
 
 Detected using `pandas.DataFrame.duplicated()` across all columns (or user-selected subset). The user chooses which occurrence to keep ("first" or "last").
 
-### 3.2 Repeated Values in a Column
+### 4.2 Repeated Values in a Column
 
 Repeated values in an individual column (e.g., multiple customers from "Boston") are **not** treated as duplicates. They are legitimate data and are not penalized in the uniqueness score.
 
-### 3.3 Business-Key Duplicates
+### 4.3 Business-Key Duplicates
 
 Users can select a subset of columns to identify potential business-key duplicates (e.g., same customer ID appearing multiple times). This is a manual inspection step, not automatic removal.
 
 ---
 
-## 4. Outlier Detection
+## 5. Outlier Detection
 
-### 4.1 IQR-Based Method
+### 5.1 IQR-Based Method
 
 - Q1 = 25th percentile, Q3 = 75th percentile
 - IQR = Q3 − Q1
@@ -154,14 +181,14 @@ Users can select a subset of columns to identify potential business-key duplicat
 - Values outside the fences are outliers
 - Multiplier is configurable (default: 1.5)
 
-### 4.2 Z-Score-Based Method
+### 5.2 Z-Score-Based Method
 
 - Z = (value − mean) / standard deviation
 - Values with |Z| > threshold are outliers
 - Threshold is configurable (default: 3.0)
 - Only meaningful for approximately normal distributions
 
-### 4.3 Actions (user-selected)
+### 5.3 Actions (user-selected)
 
 | Action | Description |
 |--------|-------------|
@@ -170,7 +197,7 @@ Users can select a subset of columns to identify potential business-key duplicat
 | Remove | Drop outlier rows |
 | Flag | Add boolean outlier indicator column |
 
-### 4.4 Limitations
+### 5.4 Limitations
 
 - Outliers are statistical anomalies, not necessarily errors.
 - Domain knowledge is required to distinguish errors from legitimate extreme values.
@@ -178,9 +205,9 @@ Users can select a subset of columns to identify potential business-key duplicat
 
 ---
 
-## 5. Type Detection
+## 6. Type Detection
 
-### 5.1 Inferred Types
+### 6.1 Inferred Types
 
 | Type | Detection Rule |
 |------|---------------|
@@ -191,7 +218,7 @@ Users can select a subset of columns to identify potential business-key duplicat
 | Categorical | Text column that doesn't match numeric or date patterns |
 | Empty | All values are null |
 
-### 5.2 Identifier Detection
+### 6.2 Identifier Detection
 
 A column is flagged as an identifier candidate if:
 - Its name contains hints like "id", "key", "code", "uid", "uuid"
@@ -199,7 +226,7 @@ A column is flagged as an identifier candidate if:
 
 Identifier columns are excluded from default correlation matrices and meaningful statistical summaries.
 
-### 5.3 Safe Conversion
+### 6.3 Safe Conversion
 
 - Invalid values that cannot be converted become missing and are counted/disclosed.
 - Leading zeros in identifier columns are preserved by keeping them as strings.
@@ -207,27 +234,52 @@ Identifier columns are excluded from default correlation matrices and meaningful
 
 ---
 
-## 6. Correlation Analysis
+## 7. Correlation Analysis
 
-### 6.1 Methods
+### 7.1 Methods
 
 - **Pearson:** Linear relationship between two numeric variables. Sensitive to outliers.
 - **Spearman:** Monotonic relationship based on ranked values. More robust to outliers.
 
-### 6.2 Missing-Data Handling
+### 7.2 Missing-Data Handling
 
-Pairwise complete observations: each correlation coefficient is computed using only rows where both variables are non-null.
+Pairwise complete observations: each correlation coefficient is computed using only rows where both variables are non-null. Columns with identifier-like name tokens are excluded from the default correlation matrix; explicitly selected columns can include them.
 
-### 6.3 Limitations
+### 7.3 Limitations
 
 - Correlation does not imply causation.
 - Small samples produce unstable coefficients.
 - Restricted ranges attenuate correlations.
-- Identifier columns are excluded from the default matrix.
+- Columns with identifier-like name tokens are excluded from the default matrix. Generic or misleading headers may still leave numeric IDs in the analysis; review the selected variables and explicitly include excluded variables only when appropriate.
 
 ---
 
-## 7. Limitations
+## 8. File Loading and Analysis Assumptions
+
+- CSV supports auto-detected or explicit comma, semicolon, tab, and pipe
+  separators. Auto-detection evaluates row structure; when no multi-field
+  separator is present, the file remains one column. Short rows are padded as
+  missing fields by pandas; records with more fields than the header are
+  rejected as malformed.
+- CSV encoding can be detected from UTF-8 (with or without BOM),
+  Windows-1252, or Latin-1, or selected explicitly. Malformed quoted rows and
+  records with more fields than the header are rejected with a parse error.
+- Excel (`.xlsx`, `.xlsm`) loads one user-selected worksheet using
+  `openpyxl`.
+- Uploads are restricted by `RESOURCE_LIMITS.max_file_size_mb` and
+  `RESOURCE_LIMITS.max_rows`. These limits protect ordinary in-memory use;
+  parsing is not a streaming/chunked process.
+- Pearson correlation describes linear association; Spearman describes
+  monotonic rank association. Pairwise correlations use pairwise complete
+  observations. Small samples, outliers, and restricted value ranges affect
+  interpretation; association does not imply causation.
+- Grouped numeric summaries report count, mean, median, standard deviation,
+  minimum, and maximum. Null target values are omitted from each statistic;
+  null group labels are retained as a group.
+
+---
+
+## 9. Limitations
 
 1. **Score is not accuracy.** A high quality score does not prove the dataset is accurate, unbiased, representative, or suitable for every analysis. Fitness for purpose depends on the analytical objective.
 
@@ -241,7 +293,7 @@ Pairwise complete observations: each correlation coefficient is computed using o
 
 ---
 
-## 8. Reproducibility
+## 10. Reproducibility
 
 - Identical inputs and settings always yield identical scores.
 - All calculations use explicit missing-data policies (pairwise complete for correlations, listwise for most other metrics).

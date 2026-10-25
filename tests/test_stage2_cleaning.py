@@ -96,3 +96,31 @@ def test_cleaning_checkbox_updates_working_copy_only():
 
     # Verify the cleaning pipeline was initialized
     assert "cleaning_pipeline" in app.session_state or "cleaned_data" in app.session_state
+
+
+def test_cleaning_ui_previews_then_applies_an_approved_operation():
+    app = AppTest.from_file(str(Path(__file__).parents[1] / "app.py"))
+    source = pd.DataFrame({"value": [1, 1, 2]})
+    app.session_state["data"] = source
+    app.session_state["source"] = "duplicates.csv"
+    app.session_state["active_workspace"] = "Data Cleaning"
+    app.run(timeout=30)
+
+    app.button(key="FormSubmitter:cleaning_operation_form-Build transformation preview").click().run(timeout=30)
+    assert app.session_state["cleaning_preview"]["operation"] == "Remove duplicates"
+    assert app.session_state["cleaning_pipeline"].working.shape == (3, 1)
+
+    app.session_state["analysis_cache"] = {(0, "stale"): {"result": True}}
+    app.button(key="approve_cleaning_preview").click().run(timeout=30)
+
+    assert app.session_state["cleaning_pipeline"].working.shape == (2, 1)
+    assert source.shape == (3, 1)
+    assert app.session_state["workspace_revision"] == 1
+    assert app.session_state["analysis_cache"] == {}
+    assert len(app.session_state["cleaning_pipeline"].records) == 1
+
+    for page in ["Data Quality", "Reports & Export", "Data Cleaning"]:
+        app.radio[0].set_value(page).run(timeout=30)
+        assert not app.exception, (page, [error.message for error in app.exception])
+        assert app.session_state["cleaning_pipeline"].working.shape == (2, 1)
+        assert len(app.session_state["cleaning_pipeline"].records) == 1

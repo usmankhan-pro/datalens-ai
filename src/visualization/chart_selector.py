@@ -7,6 +7,8 @@ from typing import Any
 import pandas as pd
 from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype
 
+from src.analysis.correlation import default_correlation_columns
+
 
 def column_kind(series: pd.Series) -> str:
     """Classify a series as numeric, datetime, or categorical."""
@@ -90,10 +92,16 @@ def recommend_charts(
 
 def recommend_pair_chart(
     data: pd.DataFrame,
-    col_a: str,
-    col_b: str,
+    col_a: str | None,
+    col_b: str | None,
 ) -> list[dict[str, Any]]:
-    """Recommend chart types for a pair of columns based on their types."""
+    """Recommend chart types for a pair of existing columns.
+
+    Returns no recommendations if either column is missing or unselected.
+    """
+    if col_a not in data.columns or col_b not in data.columns:
+        return []
+
     kind_a = column_kind(data[col_a])
     kind_b = column_kind(data[col_b])
 
@@ -162,7 +170,7 @@ def recommend_correlation_chart(
 ) -> dict[str, Any]:
     """Recommend whether a correlation heatmap is appropriate."""
     if columns is None:
-        columns = data.select_dtypes(include="number").columns.tolist()
+        columns = default_correlation_columns(data)
 
     numeric_cols = [c for c in columns if c in data.columns and is_numeric_dtype(data[c])]
 

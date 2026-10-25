@@ -16,7 +16,8 @@ _PLACEHOLDERS = frozenset(
 def _normalize_placeholders(series: pd.Series) -> pd.Series:
     """Treat configured placeholder strings as missing in object columns."""
     if series.dtype == object or str(series.dtype).startswith("string"):
-        return series.replace(list(_PLACEHOLDERS), pd.NA)
+        placeholders = series.astype("string").str.strip().str.casefold().isin(_PLACEHOLDERS)
+        return series.mask(placeholders, pd.NA)
     return series
 
 

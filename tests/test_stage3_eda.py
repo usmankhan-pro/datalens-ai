@@ -1,7 +1,15 @@
+from pathlib import Path
+
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
+from streamlit.testing.v1 import AppTest
 
 from app import load_demo
+from src.analysis.correlation import pairwise_correlations
+from src.visualization.chart_selector import (
+    recommend_correlation_chart,
+    recommend_pair_chart,
+)
 from eda import (
     boxplot,
     categorical_description,
@@ -60,3 +68,65 @@ def test_plots_render_for_telco_numeric_columns():
     assert histogram_figure.axes
     assert box_figure.axes
     assert heatmap_figure.axes
+
+
+def test_pair_chart_selector_handles_unselected_or_missing_columns():
+    data = pd.DataFrame({"value": [1, 2, 3]})
+
+    assert recommend_pair_chart(data, "value", None) == []
+    assert recommend_pair_chart(data, "value", "missing") == []
+
+
+def test_correlations_exclude_identifier_candidates_by_default_but_allow_explicit_selection():
+    data = pd.DataFrame(
+        {
+            "customer_id": [101, 102, 103, 104],
+            "amount": [10, 20, 10, 30],
+            "score": [8, 7, 8, 9],
+            "valid": [1, 2, 3, 2],
+        }
+    )
+
+    default_result = pairwise_correlations(data)
+    explicit_result = pairwise_correlations(
+        data,
+        columns=["customer_id", "amount"],
+    )
+
+    assert default_result["columns"] == ["amount", "score", "valid"]
+    assert explicit_result["columns"] == ["customer_id", "amount"]
+    assert any("pass columns explicitly" in warning for warning in default_result["warnings"])
+
+
+def test_correlations_warn_when_pair_has_insufficient_complete_samples():
+    data = pd.DataFrame({"left": [1, 2, 3], "right": [2, 4, None]})
+
+    result = pairwise_correlations(data)
+
+    assert result["sample_sizes"]["left"]["right"] == 2
+    assert any("fewer than 3 complete observations" in warning for warning in result["warnings"])
+
+
+def test_correlation_chart_recommendation_uses_non_identifier_numeric_columns():
+    data = pd.DataFrame(
+        {
+            "customer_id": [101, 102, 103],
+            "amount": [10, 20, 30],
+        }
+    )
+
+    recommendation = recommend_correlation_chart(data)
+
+    assert recommendation["recommended"] is False
+    assert recommendation["columns"] == ["amount"]
+
+
+def test_app_eda_handles_single_column_dataset():
+    app = AppTest.from_file(str(Path(__file__).parents[1] / "app.py"))
+    app.session_state["data"] = pd.DataFrame({"Subscribers gained": [48, 57, 40]})
+    app.session_state["source"] = "subs.csv"
+    app.session_state["active_workspace"] = "Exploratory Data Analysis (EDA)"
+
+    app.run(timeout=30)
+
+    assert not app.exception

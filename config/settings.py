@@ -1,4 +1,4 @@
-"""Central configuration for DataLens AI.
+"""Central configuration for DataFlow Analytics.
 
 Contains quality-score dimension weights, severity thresholds,
 cleaning parameters, and resource limits.  All values are

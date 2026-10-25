@@ -2,10 +2,29 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
+
+from config.settings import IDENTIFIER_NAME_HINTS
+
+
+def _has_identifier_name(column: object) -> bool:
+    """Match identifier hints as name tokens, not arbitrary substrings."""
+    name = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", str(column))
+    tokens = set(re.findall(r"[a-z0-9]+", name.casefold()))
+    return bool(tokens & IDENTIFIER_NAME_HINTS)
+
+
+def default_correlation_columns(data: pd.DataFrame) -> list[str]:
+    """Select numeric columns that are not named like identifiers."""
+    return [
+        column
+        for column in data.select_dtypes(include="number").columns.tolist()
+        if not _has_identifier_name(column)
+    ]
 
 
 def pairwise_correlations(
@@ -20,7 +39,7 @@ def pairwise_correlations(
     Returns coefficients, sample sizes, missing handling info, and warnings.
     """
     if columns is None:
-        columns = data.select_dtypes(include="number").columns.tolist()
+        columns = default_correlation_columns(data)
 
     numeric_cols = [c for c in columns if c in data.columns and is_numeric_dtype(data[c])]
 
@@ -66,8 +85,8 @@ def pairwise_correlations(
         )
     warnings.append("Correlation does not imply causation.")
     warnings.append(
-        "Identifier columns and high-cardinality IDs are excluded from the "
-        "default matrix unless explicitly requested."
+        "Columns with identifier-like names are excluded from the default "
+        "matrix; pass columns explicitly to include them."
     )
 
     return {

@@ -117,11 +117,11 @@ def convert_types(
             n_invalid = 0
             if target == "numeric":
                 converted = pd.to_numeric(series, errors="coerce")
-                n_invalid = int(series.notna() & converted.isna())
+                n_invalid = int((series.notna() & converted.isna()).sum())
                 cleaned[column] = converted
             elif target == "integer":
                 converted = pd.to_numeric(series, errors="coerce")
-                n_invalid = int(series.notna() & converted.isna())
+                n_invalid = int((series.notna() & converted.isna()).sum())
                 # Only convert to Int64 if no fractional values among valid
                 valid = converted.dropna()
                 if not valid.empty and (valid % 1 == 0).all():
@@ -130,7 +130,7 @@ def convert_types(
                     cleaned[column] = converted
             elif target == "datetime":
                 converted = pd.to_datetime(series, errors="coerce", format="mixed")
-                n_invalid = int(series.notna() & converted.isna())
+                n_invalid = int((series.notna() & converted.isna()).sum())
                 cleaned[column] = converted
             elif target == "categorical":
                 cleaned[column] = series.astype("category")
@@ -145,7 +145,7 @@ def convert_types(
                 converted = lowered.map(
                     lambda v: True if v in truthy else (False if v in falsy else pd.NA)
                 )
-                n_invalid = int(series.notna() & converted.isna())
+                n_invalid = int((series.notna() & converted.isna()).sum())
                 cleaned[column] = converted
             else:
                 raise ValueError(f"Unknown target type: {target}")

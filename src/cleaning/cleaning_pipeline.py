@@ -31,9 +31,11 @@ class CleaningPipeline:
 
     def __init__(self, source_data: pd.DataFrame):
         self._source: pd.DataFrame = source_data.copy(deep=True)
+        self._source_snapshot: pd.DataFrame = source_data.copy(deep=True)
         self._working: pd.DataFrame = source_data.copy(deep=True)
         self._records: list[CleaningRecord] = []
         self._history: list[pd.DataFrame] = [self._working.copy(deep=True)]
+        self._history_record_counts: list[int] = [0]
 
     @property
     def source(self) -> pd.DataFrame:
@@ -56,19 +58,34 @@ class CleaningPipeline:
         self._working = self._source.copy(deep=True)
         self._records = []
         self._history = [self._working.copy(deep=True)]
+        self._history_record_counts = [0]
 
     def undo(self) -> bool:
         """Revert to the previous working state.  Returns True if an undo happened."""
         if not self.can_undo:
             return False
-        self._history.pop()
-        self._working = self._history[-1].copy(deep=True)
-        if self._records:
-            self._records.pop()
+        previous = self._history.pop()
+        record_count = self._history_record_counts.pop()
+        self._working = previous.copy(deep=True)
+        del self._records[record_count:]
         return True
 
     def _snapshot(self) -> None:
         self._history.append(self._working.copy(deep=True))
+        self._history_record_counts.append(len(self._records))
+
+    def apply_preview(
+        self,
+        cleaned_data: pd.DataFrame,
+        records: list[CleaningRecord],
+    ) -> list[dict[str, Any]]:
+        """Commit a user-approved preview as one undoable operation."""
+        if not isinstance(cleaned_data, pd.DataFrame):
+            raise TypeError("A cleaning preview must contain a pandas DataFrame.")
+        self._snapshot()
+        self._working = cleaned_data.copy(deep=True)
+        self._records.extend(records)
+        return [record.to_dict() for record in records]
 
     # ------------------------------------------------------------------
     # Diagnostics (read-only, no state change)
@@ -186,5 +203,5 @@ class CleaningPipeline:
         return CleaningResult(
             cleaned_data=self._working,
             records=list(self._records),
-            source_immutable=self._working.equals(self._source) or True,
+            source_immutable=self._source.equals(self._source_snapshot),
         )

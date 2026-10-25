@@ -1,4 +1,4 @@
-"""Plotly chart builders for DataLens AI.
+"""Plotly chart builders for DataFlow Analytics.
 
 All functions return plotly.graph_objects.Figure objects.  Charts are
 type-aware, have readable titles and axis labels, and avoid generating

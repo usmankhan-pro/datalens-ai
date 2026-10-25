@@ -456,7 +456,7 @@ def compute_quality_score(data: pd.DataFrame) -> QualityScoreResult:
         excluded_dimensions=excluded,
         n_rows=n_rows,
         n_cols=n_cols,
-        computed_from="DataLens AI quality scoring engine (configurable weights)",
+        computed_from="DataFlow Analytics quality scoring engine (configurable weights)",
     )
 
 
